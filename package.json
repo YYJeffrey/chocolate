@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "A data assistant for selected stocks and funds.",
   "author": "Jeffrey",
-  "license": "GPL",
+  "license": "GPL-3.0",
   "engines": {
     "node": ">=10"
   },

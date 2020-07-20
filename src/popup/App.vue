@@ -2,15 +2,13 @@
   <div class="content">
     <a-card class="card">
       <a-card-grid v-for="item in stockBoard" :key="item.code" class="card-grid">
-        <span class="card-title">{{item.name}}</span>
-        <span :class="'index ' + (item.price - item.close >= 0 ? 'red' : 'green')">{{item.price}}</span>
+        <span class="card-title">{{ item.name }}</span>
+        <span :class="'index ' + (item.price - item.close >= 0 ? 'red' : 'green')">{{ item.price }}</span>
         <div class="increase-box">
-          <span
-            :class="'increase-number ' + (item.price - item.close >= 0 ? 'red' : 'green')"
-          >{{(item.price - item.close >= 0 ? '+' : '-') + item.price - item.close | formatAmount}}</span>
-          <span
-            :class="'increase-percent ' + (item.price - item.close >= 0 ? 'red' : 'green')"
-          >{{(item.changePercent >= 0 ? '+' : '-') + item.changePercent + '%'}}</span>
+          <span :class="'increase-number ' + (item.price - item.close >= 0 ? 'red' : 'green')">{{
+            ((item.price - item.close >= 0 ? '+' : '-') + item.price - item.close) | formatAmount
+          }}</span>
+          <span :class="'increase-percent ' + (item.price - item.close >= 0 ? 'red' : 'green')">{{ (item.changePercent >= 0 ? '+' : '-') + item.changePercent + '%' }}</span>
         </div>
       </a-card-grid>
     </a-card>
@@ -18,6 +16,8 @@
 </template>
 
 <script>
+import config from '../config';
+
 export default {
   data() {
     return {
@@ -26,6 +26,7 @@ export default {
   },
   mounted() {
     this.getStockBoard();
+    setInterval(this.getStockBoard, 3000);
   },
   filters: {
     formatAmount(value) {
@@ -35,10 +36,15 @@ export default {
     },
   },
   methods: {
+    /**
+     * 获取大盘指数
+     */
     getStockBoard() {
-      let url = 'https://api.doctorxiong.club/v1/stock/board';
+      let url = config.baseAPI + '/stock/board';
       this.$axios.get(url).then(res => {
-        this.stockBoard = res.data.data;
+        if (res.data.code === 200) {
+          this.stockBoard = res.data.data;
+        }
       });
     },
   },
