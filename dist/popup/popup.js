@@ -64593,11 +64593,25 @@ object-assign
       };
     'undefined' != typeof window && window.Vue && nM(window.Vue);
     var iM = { version: Q_, install: nM },
-      rM = (n(369), 'https://api.doctorxiong.club/v1'),
-      aM = {
+      rM = (n(369), 'https://api.doctorxiong.club/v1');
+    var aM = {
+        isDealingTime: function() {
+          var e = new Date(),
+            t = e.getDay();
+          if (0 !== t && 6 !== t) {
+            var n = new Date(new Date().setHours(9, 30, 0, 0)),
+              i = new Date(new Date().setHours(11, 30, 0, 0)),
+              r = new Date(new Date().setHours(13, 0, 0, 0)),
+              a = new Date(new Date().setHours(15, 0, 0, 0));
+            if ((e >= n && e <= i) || (e >= r && e <= a)) return !0;
+          }
+          return !1;
+        },
+      },
+      oM = {
         data: () => ({ stockBoard: [] }),
         mounted() {
-          this.getStockBoard(), setInterval(this.getStockBoard, 3e3);
+          this.getStockBoard(), aM.isDealingTime() && setInterval(this.getStockBoard, 3e3);
         },
         filters: {
           formatAmount(e) {
@@ -64615,9 +64629,9 @@ object-assign
           },
         },
       },
-      oM = (n(395), n(71)),
-      sM = Object(oM.a)(
-        aM,
+      sM = (n(395), n(71)),
+      cM = Object(sM.a)(
+        oM,
         function() {
           var e = this,
             t = e.$createElement,
@@ -64637,7 +64651,7 @@ object-assign
                     e._v(' '),
                     n('div', { staticClass: 'increase-box' }, [
                       n('span', { class: 'increase-number ' + (t.price - t.close >= 0 ? 'red' : 'green') }, [
-                        e._v(e._s(e._f('formatAmount')((t.price - t.close >= 0 ? '+' : '-') + t.price - t.close))),
+                        e._v('\n          ' + e._s(e._f('formatAmount')((t.price - t.close >= 0 ? '+' : '-') + t.price - t.close)) + '\n        '),
                       ]),
                       e._v(' '),
                       n('span', { class: 'increase-percent ' + (t.price - t.close >= 0 ? 'red' : 'green') }, [
@@ -64655,18 +64669,18 @@ object-assign
         [],
         !1,
         null,
-        '3a8cc396',
+        '54e37d4b',
         null
       ).exports,
-      cM = (n(396), n(351)),
-      lM = n.n(cM);
-    (i.a.prototype.$axios = lM.a),
+      lM = (n(396), n(351)),
+      uM = n.n(lM);
+    (i.a.prototype.$axios = uM.a),
       (i.a.config.productionTip = !1),
       i.a.use(iM),
       new i.a({
         el: '#app',
         render: function(e) {
-          return e(sM);
+          return e(cM);
         },
       });
   },

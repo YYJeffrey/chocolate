@@ -5,9 +5,9 @@
         <span class="card-title">{{ item.name }}</span>
         <span :class="'index ' + (item.price - item.close >= 0 ? 'red' : 'green')">{{ item.price }}</span>
         <div class="increase-box">
-          <span :class="'increase-number ' + (item.price - item.close >= 0 ? 'red' : 'green')">{{
-            ((item.price - item.close >= 0 ? '+' : '-') + item.price - item.close) | formatAmount
-          }}</span>
+          <span :class="'increase-number ' + (item.price - item.close >= 0 ? 'red' : 'green')">
+            {{ ((item.price - item.close >= 0 ? '+' : '-') + item.price - item.close) | formatAmount }}
+          </span>
           <span :class="'increase-percent ' + (item.price - item.close >= 0 ? 'red' : 'green')">{{ (item.changePercent >= 0 ? '+' : '-') + item.changePercent + '%' }}</span>
         </div>
       </a-card-grid>
@@ -17,6 +17,7 @@
 
 <script>
 import config from '../config';
+import util from '../util/util';
 
 export default {
   data() {
@@ -26,7 +27,10 @@ export default {
   },
   mounted() {
     this.getStockBoard();
-    setInterval(this.getStockBoard, 3000);
+
+    if (util.isDealingTime()) {
+      setInterval(this.getStockBoard, 3000);
+    }
   },
   filters: {
     formatAmount(value) {
@@ -75,6 +79,7 @@ export default {
 
       .index {
         font-weight: bold;
+        margin-top: 2px;
       }
 
       .increase-box {
