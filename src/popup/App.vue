@@ -5,36 +5,66 @@
         <span class="card-title">{{ item.name }}</span>
         <span :class="'index ' + (item.priceChange >= 0 ? 'red' : 'green')">{{ item.price }}</span>
         <div class="increase-box">
-          <span :class="'increase-number ' + (item.priceChange >= 0 ? 'red' : 'green')">{{ (item.priceChange > 0 ? '+' : '') + item.priceChange }}</span>
-          <span :class="'increase-percent ' + (item.priceChange >= 0 ? 'red' : 'green')">{{ (item.changePercent > 0 ? '+' : '') + item.changePercent + '%' }}</span>
+          <span
+            :class="'increase-number ' + (item.priceChange >= 0 ? 'red' : 'green')"
+          >{{ (item.priceChange > 0 ? '+' : '') + item.priceChange }}</span>
+          <span
+            :class="'increase-percent ' + (item.priceChange >= 0 ? 'red' : 'green')"
+          >{{ (item.changePercent > 0 ? '+' : '') + item.changePercent + '%' }}</span>
         </div>
       </a-card-grid>
     </a-card>
 
+    <div class="action-box">
+      <a-input-search
+        class="search-bar"
+        placeholder="请输入股票或基金代码"
+        enter-button="添加"
+        maxlength="10"
+        @search="onSearch"
+      />
+    </div>
+
     <a-table class="table" :data-source="listData" :pagination="false" size="small">
       <a-table-column title="名称" data-index="name" align="center">
-        <template slot-scope="name">
-          <span class="column">{{ name }}</span>
+        <template slot-scope="text, record">
+          <span class="table-column bold">{{ record.name }}</span>
+          <a-tag v-if="record.type === 'stock'" color="red">股</a-tag>
+          <a-tag v-else color="orange">基</a-tag>
         </template>
       </a-table-column>
       <a-table-column title="代码" data-index="code" align="center">
         <template slot-scope="code">
-          <span class="column">{{ code }}</span>
+          <span class="table-column">{{ code }}</span>
         </template>
       </a-table-column>
-      <a-table-column title="价格" data-index="price" align="center">
-        <template slot-scope="price">
-          <span class="column">{{ price }}</span>
+      <a-table-column
+        title="价格"
+        data-index="price"
+        align="center"
+        :sorter="(a, b) => {return a.price - b.price}"
+      >
+        <template slot-scope="text, record">
+          <span
+            :class="'table-column bold ' + (record.percent > 0 ? 'red' : 'green')"
+          >{{ record.price }}</span>
         </template>
       </a-table-column>
-      <a-table-column title="涨幅" data-index="percent" align="center">
+      <a-table-column
+        title="涨幅"
+        data-index="percent"
+        align="center"
+        :sorter="(a, b) => {return a.percent - b.percent}"
+      >
         <template slot-scope="percent">
-          <span class="column">{{ percent }}</span>
+          <span
+            :class="'table-column ' + (percent > 0 ? 'red' : 'green')"
+          >{{ (percent > 0 ? '+' : '') + percent + '%' }}</span>
         </template>
       </a-table-column>
-      <a-table-column title="时间" data-index="date" align="center">
-        <template slot-scope="date">
-          <span class="column">{{ date }}</span>
+      <a-table-column title="操作" align="center">
+        <template slot-scope="code">
+          <a-icon type="delete" @click="remove(code)" />
         </template>
       </a-table-column>
     </a-table>
@@ -53,17 +83,15 @@ export default {
         {
           name: '上证指数',
           code: 'sh000001',
-          price: '3330.57',
-          percent: '0.50',
-          date: '07-20 09:35',
+          price: 3330.57,
+          percent: 0.5,
           type: 'stock',
         },
         {
           name: '天弘沪深300ETF联接A',
           code: '000961',
           price: 1.4608,
-          percent: '2.8517',
-          date: '07-20 09:35',
+          percent: 2.8517,
           type: 'fund',
         },
       ],
@@ -129,21 +157,56 @@ export default {
   .table {
     margin-top: 38px;
 
-    .column {
+    .table-column {
+      color: #141414;
       font-size: 12px;
     }
   }
 
-  .ant-table-body {
-    margin: 0 !important;
-  }
+  .action-box {
+    display: flex;
 
-  .red {
-    color: #cf1322;
+    .search-bar {
+      width: 280px;
+      margin: 38px auto 0 auto;
+    }
   }
+}
 
-  .green {
-    color: #389e0d;
-  }
+.red {
+  color: #cf1322 !important;
+}
+
+.green {
+  color: #389e0d !important;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+/deep/ .ant-table-content > .ant-table-body {
+  margin: 0 !important;
+}
+
+/deep/ .ant-table-thead > tr > th {
+  font-size: 12px;
+  color: #141414;
+  font-weight: bold;
+  line-height: 23px;
+}
+
+/deep/ .ant-table-thead > tr > th .ant-table-column-sorter .ant-table-column-sorter-inner {
+  height: 1.5em;
+  margin-left: 0.57142857em;
+  color: #bfbfbf;
+  line-height: 1em;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+/deep/ .ant-table-small {
+  border: 1px solid #e8e8e8;
+  border-radius: 0;
 }
 </style>
