@@ -5,24 +5,20 @@
         <span class="card-title">{{ item.name }}</span>
         <span :class="'index ' + (item.priceChange >= 0 ? 'red' : 'green')">{{ item.price }}</span>
         <div class="increase-box">
-          <span
-            :class="'increase-number ' + (item.priceChange >= 0 ? 'red' : 'green')"
-          >{{ (item.priceChange > 0 ? '+' : '') + item.priceChange }}</span>
-          <span
-            :class="'increase-percent ' + (item.priceChange >= 0 ? 'red' : 'green')"
-          >{{ (item.changePercent > 0 ? '+' : '') + item.changePercent + '%' }}</span>
+          <span :class="'increase-number ' + (item.priceChange >= 0 ? 'red' : 'green')">{{ (item.priceChange > 0 ? '+' : '') + item.priceChange }}</span>
+          <span :class="'increase-percent ' + (item.priceChange >= 0 ? 'red' : 'green')">{{ (item.changePercent > 0 ? '+' : '') + item.changePercent + '%' }}</span>
         </div>
       </a-card-grid>
     </a-card>
 
     <div class="action-box">
-      <a-input-search
-        class="search-bar"
-        placeholder="请输入股票或基金代码"
-        enter-button="添加"
-        maxlength="10"
-        @search="onSearch"
-      />
+      <a-input-group compact>
+        <a-select default-value="股票" class="search-opt" @change="changeSearch">
+          <a-select-option value="stock">股票</a-select-option>
+          <a-select-option value="fund">基金</a-select-option>
+        </a-select>
+        <a-input-search class="search-bar" :placeholder="searchType === 'stock' ? '请输入股票代码' : '请输入基金代码'" enter-button="添加" maxlength="12" @search="onSearch" />
+      </a-input-group>
     </div>
 
     <a-table class="table" :data-source="listData" :pagination="false" size="small">
@@ -42,24 +38,28 @@
         title="价格"
         data-index="price"
         align="center"
-        :sorter="(a, b) => {return a.price - b.price}"
+        :sorter="
+          (a, b) => {
+            return a.price - b.price;
+          }
+        "
       >
         <template slot-scope="text, record">
-          <span
-            :class="'table-column bold ' + (record.percent > 0 ? 'red' : 'green')"
-          >{{ record.price }}</span>
+          <span :class="'table-column bold ' + (record.percent > 0 ? 'red' : 'green')">{{ record.price }}</span>
         </template>
       </a-table-column>
       <a-table-column
         title="涨幅"
         data-index="percent"
         align="center"
-        :sorter="(a, b) => {return a.percent - b.percent}"
+        :sorter="
+          (a, b) => {
+            return a.percent - b.percent;
+          }
+        "
       >
         <template slot-scope="percent">
-          <span
-            :class="'table-column ' + (percent > 0 ? 'red' : 'green')"
-          >{{ (percent > 0 ? '+' : '') + percent + '%' }}</span>
+          <span :class="'table-column ' + (percent > 0 ? 'red' : 'green')">{{ (percent > 0 ? '+' : '') + percent + '%' }}</span>
         </template>
       </a-table-column>
       <a-table-column title="操作" align="center">
@@ -95,6 +95,7 @@ export default {
           type: 'fund',
         },
       ],
+      searchType: 'stock',
     };
   },
   mounted() {
@@ -109,12 +110,50 @@ export default {
      * 获取大盘指数
      */
     getStockBoard() {
-      let url = config.baseAPI + '/stock/board';
+      const url = config.baseAPI + '/stock/board';
       this.$axios.get(url).then(res => {
         if (res.data.code === 200) {
           this.stockBoard = res.data.data;
         }
       });
+    },
+
+    changeSearch(e) {
+      this.searchType = e;
+    },
+
+    onSearch(code) {
+      if (this.searchType === 'stock') {
+        const stockUrl = config.baseAPI + '/stock/detail?code=' + code;
+        this.$axios.get(stockUrl).then(res => {
+          if (res.data.code === 200) {
+            const data = res.data.data;
+            const info = {};
+            info.name = data.name;
+            info.code = data.code;
+            info.price = parseFloat(data.price);
+            info.percent = parseFloat(data.changePercent);
+            info.type = 'stock';
+            this.listData.push(info);
+          }
+        });
+      }
+
+      if (this.searchType === 'fund') {
+        const fundUrl = config.baseAPI + '/fund/detail?code=' + code;
+        this.$axios.get(fundUrl).then(res => {
+          if (res.data.code === 200) {
+            const data = res.data.data;
+            const info = {};
+            info.name = data.name;
+            info.code = data.code;
+            info.price = data.expectWorth;
+            info.percent = parseFloat(data.dayGrowth);
+            info.type = 'fund';
+            this.listData.push(info);
+          }
+        });
+      }
     },
   },
 };
@@ -165,10 +204,17 @@ export default {
 
   .action-box {
     display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding-top: 38px;
+
+    .search-opt {
+      width: 68px;
+    }
 
     .search-bar {
       width: 280px;
-      margin: 38px auto 0 auto;
     }
   }
 }
