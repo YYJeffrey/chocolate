@@ -5,23 +5,39 @@
         <span class="card-title">{{ item.name }}</span>
         <span :class="'index ' + (item.priceChange >= 0 ? 'red' : 'green')">{{ item.price }}</span>
         <div class="increase-box">
-          <span :class="'increase-number ' + (item.priceChange >= 0 ? 'red' : 'green')">{{ (item.priceChange > 0 ? '+' : '') + item.priceChange }}</span>
-          <span :class="'increase-percent ' + (item.priceChange >= 0 ? 'red' : 'green')">{{ (item.changePercent > 0 ? '+' : '') + item.changePercent + '%' }}</span>
+          <span
+            :class="'increase-number ' + (item.priceChange >= 0 ? 'red' : 'green')"
+          >{{ (item.priceChange > 0 ? '+' : '') + item.priceChange }}</span>
+          <span
+            :class="'increase-percent ' + (item.priceChange >= 0 ? 'red' : 'green')"
+          >{{ (item.changePercent > 0 ? '+' : '') + item.changePercent + '%' }}</span>
         </div>
       </a-card-grid>
     </a-card>
 
     <div class="action-box">
       <a-input-group compact>
-        <a-select default-value="股票" class="search-opt" @change="changeSearch">
+        <a-select default-value="stock" class="search-opt" @change="changeSearch">
           <a-select-option value="stock">股票</a-select-option>
           <a-select-option value="fund">基金</a-select-option>
         </a-select>
-        <a-input-search class="search-bar" :placeholder="searchType === 'stock' ? '请输入股票代码' : '请输入基金代码'" enter-button="添加" maxlength="12" @search="onSearch" />
+        <a-input-search
+          class="search-bar"
+          :placeholder="searchType === 'stock' ? '请输入股票代码' : '请输入基金代码'"
+          enter-button="添加"
+          maxlength="12"
+          @search="onSearch"
+        />
       </a-input-group>
     </div>
 
-    <a-table class="table" :data-source="listData" :pagination="false" size="small">
+    <a-table
+      v-if="listData.length > 0"
+      class="table"
+      :data-source="listData"
+      :pagination="false"
+      size="small"
+    >
       <a-table-column title="名称" data-index="name" align="center">
         <template slot-scope="text, record">
           <span class="table-column bold">{{ record.name }}</span>
@@ -45,7 +61,9 @@
         "
       >
         <template slot-scope="text, record">
-          <span :class="'table-column bold ' + (record.percent > 0 ? 'red' : 'green')">{{ record.price }}</span>
+          <span
+            :class="'table-column bold ' + (record.percent >= 0 ? 'red' : 'green')"
+          >{{ record.price }}</span>
         </template>
       </a-table-column>
       <a-table-column
@@ -59,12 +77,14 @@
         "
       >
         <template slot-scope="percent">
-          <span :class="'table-column ' + (percent > 0 ? 'red' : 'green')">{{ (percent > 0 ? '+' : '') + percent + '%' }}</span>
+          <span
+            :class="'table-column ' + (percent >= 0 ? 'red' : 'green')"
+          >{{ (percent >= 0 ? '+' : '') + percent + '%' }}</span>
         </template>
       </a-table-column>
       <a-table-column title="操作" align="center">
-        <template slot-scope="code">
-          <a-icon type="delete" @click="remove(code)" />
+        <template slot-scope="record">
+          <a-icon type="delete" @click="removeData(record)" />
         </template>
       </a-table-column>
     </a-table>
@@ -79,30 +99,23 @@ export default {
   data() {
     return {
       stockBoard: [],
-      listData: [
-        {
-          name: '上证指数',
-          code: 'sh000001',
-          price: 3330.57,
-          percent: 0.5,
-          type: 'stock',
-        },
-        {
-          name: '天弘沪深300ETF联接A',
-          code: '000961',
-          price: 1.4608,
-          percent: 2.8517,
-          type: 'fund',
-        },
-      ],
+      listData: [],
       searchType: 'stock',
     };
   },
   mounted() {
+    chrome.storage.sync.get(['listData'], res => {
+      this.listData = res.listData;
+    });
+
     this.getStockBoard();
+    this.updateListData();
 
     if (util.isDealingTime()) {
-      setInterval(this.getStockBoard, 3000);
+      setInterval(() => {
+        this.getStockBoard();
+        this.updateListData();
+      }, 3500);
     }
   },
   methods: {
@@ -117,43 +130,143 @@ export default {
         }
       });
     },
+    /**
+     * 获取股票数据
+     */
+    getStockData(code) {
+      const url = config.baseAPI + '/stock/detail?code=' + code;
 
-    changeSearch(e) {
-      this.searchType = e;
+      return this.$axios.get(url).then(res => {
+        let info = {};
+        if (res.data.code === 200) {
+          const data = res.data.data;
+          info.name = data.name;
+          info.code = data.code;
+          info.price = parseFloat(data.price);
+          info.percent = parseFloat(data.changePercent);
+          info.type = 'stock';
+        }
+        return info;
+      });
     },
+    /**
+     * 获取基金数据
+     */
+    getFundData(code) {
+      const url = config.baseAPI + '/fund/detail?code=' + code;
 
+      return this.$axios.get(url).then(res => {
+        let info = {};
+        if (res.data.code === 200) {
+          const data = res.data.data;
+          info.name = data.name;
+          info.code = data.code;
+          info.price = data.netWorth;
+          info.percent = parseFloat(data.dayGrowth);
+          info.type = 'fund';
+        }
+        return info;
+      });
+    },
+    /**
+     * 更改搜索类型
+     */
+    changeSearch(event) {
+      this.searchType = event;
+    },
+    /**
+     * 搜索股票或基金
+     */
     onSearch(code) {
+      let listData = this.listData;
       if (this.searchType === 'stock') {
-        const stockUrl = config.baseAPI + '/stock/detail?code=' + code;
-        this.$axios.get(stockUrl).then(res => {
-          if (res.data.code === 200) {
-            const data = res.data.data;
-            const info = {};
-            info.name = data.name;
-            info.code = data.code;
-            info.price = parseFloat(data.price);
-            info.percent = parseFloat(data.changePercent);
-            info.type = 'stock';
-            this.listData.push(info);
+        this.getStockData(code).then(res => {
+          if ('code' in res) {
+            if (this.getDataIndexByCode(res.code) != -1) {
+              this.$message.warning('不可重复添加股票');
+            } else {
+              listData.push(res);
+              chrome.storage.sync.set({
+                listData: listData,
+              });
+              this.$message.success('股票添加成功');
+            }
+          } else {
+            this.$message.warning('未找到该股票');
           }
         });
       }
-
       if (this.searchType === 'fund') {
-        const fundUrl = config.baseAPI + '/fund/detail?code=' + code;
-        this.$axios.get(fundUrl).then(res => {
-          if (res.data.code === 200) {
-            const data = res.data.data;
-            const info = {};
-            info.name = data.name;
-            info.code = data.code;
-            info.price = data.expectWorth;
-            info.percent = parseFloat(data.dayGrowth);
-            info.type = 'fund';
-            this.listData.push(info);
+        this.getFundData(code).then(res => {
+          if ('code' in res) {
+            if (this.getDataIndexByCode(res.code) != -1) {
+              this.$message.warning('不可重复添加基金');
+            } else {
+              listData.push(res);
+              chrome.storage.sync.set({
+                listData: listData,
+              });
+              this.$message.success('基金添加成功');
+            }
+          } else {
+            this.$message.warning('未找到该基金');
           }
         });
       }
+      this.listData = listData;
+    },
+    /**
+     * 通过code查询数据下标
+     */
+    getDataIndexByCode(code) {
+      for (const index in this.listData) {
+        if (code == this.listData[index].code) {
+          return index;
+        }
+      }
+      return -1;
+    },
+    /**
+     * 更新列表数据
+     */
+    updateListData() {
+      const listData = this.listData;
+      for (const index in this.listData) {
+        if (listData[index].type === 'stock') {
+          this.getStockData(listData[index].code).then(res => {
+            this.listData[index] = res;
+          });
+        }
+        if (listData[index].type === 'fund') {
+          this.getFundData(listData[index].code).then(res => {
+            this.listData[index] = res;
+          });
+        }
+      }
+    },
+    /**
+     * 删除数据
+     */
+    removeData(event) {
+      const that = this;
+      this.$confirm({
+        title: '删除提示',
+        content: '您确定要删除该' + (event.type == 'stock' ? '股票' : '基金') + '？',
+        okText: '确定',
+        okType: 'danger',
+        cancelText: '取消',
+        width: 300,
+        onOk() {
+          const index = that.getDataIndexByCode(event.code);
+          let listData = that.listData;
+          listData.splice(index, 1);
+          that.listData = listData;
+          chrome.storage.sync.set({
+            listData: listData,
+          });
+          that.$message.success((event.type == 'stock' ? '股票' : '基金') + '删除成功');
+        },
+      });
     },
   },
 };
@@ -194,8 +307,6 @@ export default {
   }
 
   .table {
-    margin-top: 38px;
-
     .table-column {
       color: #141414;
       font-size: 12px;
@@ -207,7 +318,7 @@ export default {
     justify-content: center;
     align-items: center;
     text-align: center;
-    padding-top: 38px;
+    padding: 38px 0;
 
     .search-opt {
       width: 68px;
