@@ -5,8 +5,12 @@
         <span class="card-title">{{ item.name }}</span>
         <span :class="'index ' + (item.priceChange >= 0 ? 'red' : 'green')">{{ item.price }}</span>
         <div class="increase-box">
-          <span :class="'increase-number ' + (item.priceChange >= 0 ? 'red' : 'green')">{{ (item.priceChange > 0 ? '+' : '') + item.priceChange }}</span>
-          <span :class="'increase-percent ' + (item.priceChange >= 0 ? 'red' : 'green')">{{ (item.changePercent > 0 ? '+' : '') + item.changePercent + '%' }}</span>
+          <span
+            :class="'increase-number ' + (item.priceChange >= 0 ? 'red' : 'green')"
+          >{{ (item.priceChange > 0 ? '+' : '') + item.priceChange }}</span>
+          <span
+            :class="'increase-percent ' + (item.priceChange >= 0 ? 'red' : 'green')"
+          >{{ (item.changePercent > 0 ? '+' : '') + item.changePercent + '%' }}</span>
         </div>
       </a-card-grid>
     </a-card>
@@ -17,11 +21,23 @@
           <a-select-option value="stock">股票</a-select-option>
           <a-select-option value="fund">基金</a-select-option>
         </a-select>
-        <a-input-search class="search-bar" :placeholder="searchType === 'stock' ? '请输入股票代码' : '请输入基金代码'" enter-button="添加" maxlength="12" @search="onSearch" />
+        <a-input-search
+          class="search-bar"
+          :placeholder="searchType === 'stock' ? '请输入股票代码' : '请输入基金代码'"
+          enter-button="添加"
+          maxlength="12"
+          @search="onSearch"
+        />
       </a-input-group>
     </div>
 
-    <a-table v-if="listData && listData.length > 0" class="table" :data-source="listData" :pagination="false" size="small">
+    <a-table
+      v-if="listData && listData.length > 0"
+      class="table"
+      :data-source="listData"
+      :pagination="false"
+      size="small"
+    >
       <a-table-column title="名称" data-index="name" align="center">
         <template slot-scope="text, record">
           <span class="table-column bold">{{ record.name }}</span>
@@ -45,7 +61,9 @@
         "
       >
         <template slot-scope="text, record">
-          <span :class="'table-column bold ' + (record.percent >= 0 ? 'red' : 'green')">{{ record.price }}</span>
+          <span
+            :class="'table-column bold ' + (record.percent >= 0 ? 'red' : 'green')"
+          >{{ record.price }}</span>
         </template>
       </a-table-column>
       <a-table-column
@@ -59,7 +77,9 @@
         "
       >
         <template slot-scope="percent">
-          <span :class="'table-column ' + (percent >= 0 ? 'red' : 'green')">{{ (percent >= 0 ? '+' : '') + percent + '%' }}</span>
+          <span
+            :class="'table-column ' + (percent >= 0 ? 'red' : 'green')"
+          >{{ (percent >= 0 ? '+' : '') + percent + '%' }}</span>
         </template>
       </a-table-column>
       <a-table-column title="操作" align="center">
@@ -72,7 +92,6 @@
 </template>
 
 <script>
-import config from '../config';
 import util from '../util/util';
 
 export default {
@@ -84,12 +103,12 @@ export default {
     };
   },
   mounted() {
-    this.getStockBoard();
-
     chrome.storage.sync.get(['listData'], res => {
       this.listData = res.listData;
-      this.updateListData();
     });
+
+    this.getStockBoard();
+    this.updateListData();
 
     if (util.isDealingTime()) {
       setInterval(() => {
@@ -115,7 +134,7 @@ export default {
      */
     getStockData(code) {
       return new Promise(resolve => {
-        const url = config.baseAPI + '/stock/detail?code=' + code;
+        const url = '/stock/detail?code=' + code;
 
         this.$axios.get(url).then(res => {
           let info = {};
@@ -136,7 +155,7 @@ export default {
      */
     getFundData(code) {
       return new Promise(resolve => {
-        const url = config.baseAPI + '/fund/detail?code=' + code;
+        const url = '/fund/detail?code=' + code;
 
         this.$axios.get(url).then(res => {
           let info = {};
@@ -144,8 +163,8 @@ export default {
             const data = res.data.data;
             info.name = data.name;
             info.code = data.code;
-            info.price = data.netWorth;
-            info.percent = parseFloat(data.dayGrowth);
+            info.price = util.isDealingTime() ? data.expectWorth : data.netWorth;
+            info.percent = util.isDealingTime() ? parseFloat(data.expectGrowth) : parseFloat(data.dayGrowth);
             info.type = 'fund';
           }
           resolve(info);
@@ -222,20 +241,22 @@ export default {
     updateListData() {
       let promises = [];
 
-      for (const index in this.listData) {
-        if (this.listData[index].type === 'stock') {
-          promises.push(this.getStockData(this.listData[index].code));
+      for (const item in this.listData) {
+        if (item.type === 'stock') {
+          promises.push(this.getStockData(item.code));
         }
-        if (this.listData[index].type === 'fund') {
-          promises.push(this.getFundData(this.listData[index].code));
+        if (item.type === 'fund') {
+          promises.push(this.getFundData(item.code));
         }
       }
 
       Promise.all(promises).then(res => {
-        this.listData = res;
-        chrome.storage.sync.set({
-          listData: res,
-        });
+        if (res.length > 0) {
+          this.listData = res;
+          chrome.storage.sync.set({
+            listData: res,
+          });
+        }
       });
     },
     /**
