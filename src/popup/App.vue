@@ -5,12 +5,8 @@
         <span class="card-title">{{ item.name }}</span>
         <span :class="'index ' + (item.priceChange >= 0 ? 'red' : 'green')">{{ item.price }}</span>
         <div class="increase-box">
-          <span
-            :class="'increase-number ' + (item.priceChange >= 0 ? 'red' : 'green')"
-          >{{ (item.priceChange > 0 ? '+' : '') + item.priceChange }}</span>
-          <span
-            :class="'increase-percent ' + (item.priceChange >= 0 ? 'red' : 'green')"
-          >{{ (item.changePercent > 0 ? '+' : '') + item.changePercent + '%' }}</span>
+          <span :class="'increase-number ' + (item.priceChange >= 0 ? 'red' : 'green')">{{ (item.priceChange > 0 ? '+' : '') + item.priceChange }}</span>
+          <span :class="'increase-percent ' + (item.priceChange >= 0 ? 'red' : 'green')">{{ (item.changePercent > 0 ? '+' : '') + item.changePercent + '%' }}</span>
         </div>
       </a-card-grid>
     </a-card>
@@ -21,23 +17,11 @@
           <a-select-option value="stock">股票</a-select-option>
           <a-select-option value="fund">基金</a-select-option>
         </a-select>
-        <a-input-search
-          class="search-bar"
-          :placeholder="searchType === 'stock' ? '请输入股票代码' : '请输入基金代码'"
-          enter-button="添加"
-          maxlength="12"
-          @search="onSearch"
-        />
+        <a-input-search class="search-bar" :placeholder="searchType === 'stock' ? '请输入股票代码' : '请输入基金代码'" enter-button="添加" maxlength="12" @search="onSearch" />
       </a-input-group>
     </div>
 
-    <a-table
-      v-if="listData && listData.length > 0"
-      class="table"
-      :data-source="listData"
-      :pagination="false"
-      size="small"
-    >
+    <a-table v-if="listData && listData.length > 0" class="table" :data-source="listData" :pagination="false" size="small">
       <a-table-column title="名称" data-index="name" align="center">
         <template slot-scope="text, record">
           <span class="table-column bold">{{ record.name }}</span>
@@ -61,9 +45,7 @@
         "
       >
         <template slot-scope="text, record">
-          <span
-            :class="'table-column bold ' + (record.percent >= 0 ? 'red' : 'green')"
-          >{{ record.price }}</span>
+          <span :class="'table-column bold ' + (record.percent >= 0 ? 'red' : 'green')">{{ record.price }}</span>
         </template>
       </a-table-column>
       <a-table-column
@@ -77,9 +59,7 @@
         "
       >
         <template slot-scope="percent">
-          <span
-            :class="'table-column ' + (percent >= 0 ? 'red' : 'green')"
-          >{{ (percent >= 0 ? '+' : '') + percent + '%' }}</span>
+          <span :class="'table-column ' + (percent >= 0 ? 'red' : 'green')">{{ (percent >= 0 ? '+' : '') + percent + '%' }}</span>
         </template>
       </a-table-column>
       <a-table-column title="操作" align="center">
@@ -104,7 +84,9 @@ export default {
   },
   mounted() {
     chrome.storage.sync.get(['listData'], res => {
-      this.listData = res.listData;
+      if ('listData' in res) {
+        this.listData = res.listData;
+      }
     });
 
     this.getStockBoard();
@@ -181,7 +163,7 @@ export default {
      * 搜索股票或基金
      */
     onSearch(code) {
-      let listData = [];
+      let listData = this.listData;
 
       if (this.searchType === 'stock') {
         this.getStockData(code).then(res => {
@@ -191,9 +173,8 @@ export default {
               return;
             } else {
               listData.push(res);
-              this.listData = this.listData.concat(listData);
               chrome.storage.sync.set({
-                listData: this.listData,
+                listData: listData,
               });
               this.$message.success('股票添加成功');
             }
@@ -211,9 +192,8 @@ export default {
               return;
             } else {
               listData.push(res);
-              this.listData = this.listData.concat(listData);
               chrome.storage.sync.set({
-                listData: this.listData,
+                listData: listData,
               });
               this.$message.success('基金添加成功');
             }
@@ -241,7 +221,8 @@ export default {
     updateListData() {
       let promises = [];
 
-      for (const item in this.listData) {
+      for (const index in this.listData) {
+        const item = this.listData[index];
         if (item.type === 'stock') {
           promises.push(this.getStockData(item.code));
         }
