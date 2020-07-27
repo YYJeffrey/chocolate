@@ -19,6 +19,21 @@
         </a-select>
         <a-input-search class="search-bar" :placeholder="searchType === 'stock' ? '请输入股票代码' : '请输入基金代码'" enter-button="添加" maxlength="12" @search="onSearch" />
       </a-input-group>
+
+      <div class="support-box">
+        <div class="support support-github" @click="redirectGitHub">
+          <a-icon type="github" />
+          <span>查看源码</span>
+        </div>
+        <div class="support support-author" @click="showQrModal = true">
+          <a-icon type="like" theme="filled" />
+          <span>支持作者</span>
+        </div>
+      </div>
+
+      <a-modal v-model="showQrModal" centered width="228" :footer="null">
+        <img style="width: 228px;" src="https://img.yejiefeng.com/qr/qr_like.png" />
+      </a-modal>
     </div>
 
     <a-table v-if="listData && listData.length > 0" class="table" :data-source="listData" :pagination="false" size="small">
@@ -78,6 +93,7 @@ export default {
   data() {
     return {
       searchType: 'stock',
+      showQrModal: false,
       stockBoard: [],
       listData: [],
     };
@@ -264,6 +280,12 @@ export default {
         },
       });
     },
+    /**
+     * 跳转到GitHub
+     */
+    redirectGitHub() {
+      window.open('https://github.com/YYJeffrey/chocolate');
+    },
   },
 };
 </script>
@@ -311,6 +333,7 @@ export default {
 
   .action-box {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
@@ -321,7 +344,24 @@ export default {
     }
 
     .search-bar {
-      width: 280px;
+      width: 208px;
+    }
+
+    .support-box {
+      display: flex;
+      flex-direction: row;
+
+      .support {
+        font-size: 12px;
+        margin-top: 15px;
+        line-height: 15px;
+        cursor: pointer;
+        color: #bfbfbf;
+      }
+
+      .support-author {
+        margin-left: 15px;
+      }
     }
   }
 }
