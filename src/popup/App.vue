@@ -88,18 +88,20 @@
 
 <script>
 import util from '../util/util';
+const browser = require('webextension-polyfill');
 
 export default {
   data() {
     return {
       searchType: 'stock',
       showQrModal: false,
+      doNotUpdate: false,
       stockBoard: [],
       listData: [],
     };
   },
   mounted() {
-    chrome.storage.sync.get(['listData'], res => {
+    browser.storage.sync.get('listData').then(res => {
       if ('listData' in res) {
         this.listData = res.listData;
       }
@@ -108,11 +110,13 @@ export default {
     this.getStockBoard();
     this.updateListData();
 
-    if (util.isDealingTime()) {
+    if (!util.isDealingTime()) {
       setInterval(() => {
-        this.getStockBoard();
-        this.updateListData();
-      }, 3500);
+        if (!this.doNotUpdate) {
+          this.getStockBoard();
+          this.updateListData();
+        }
+      }, 3800);
     }
   },
   methods: {
@@ -180,23 +184,28 @@ export default {
      */
     onSearch(code) {
       let listData = this.listData;
+      this.doNotUpdate = true;
 
       if (this.searchType === 'stock') {
         this.getStockData(code).then(res => {
           if ('code' in res) {
             if (this.getDataIndexByCode(res.code) != -1) {
               this.$message.warning('不可重复添加股票');
-              return;
+              this.doNotUpdate = false;
             } else {
               listData.push(res);
-              chrome.storage.sync.set({
-                listData: listData,
-              });
+              browser.storage.sync
+                .set({
+                  listData: listData,
+                })
+                .then(() => {
+                  this.doNotUpdate = false;
+                });
               this.$message.success('股票添加成功');
             }
           } else {
             this.$message.warning('未找到该股票');
-            return;
+            this.doNotUpdate = false;
           }
         });
       }
@@ -205,17 +214,21 @@ export default {
           if ('code' in res) {
             if (this.getDataIndexByCode(res.code) != -1) {
               this.$message.warning('不可重复添加基金');
-              return;
+              this.doNotUpdate = false;
             } else {
               listData.push(res);
-              chrome.storage.sync.set({
-                listData: listData,
-              });
+              browser.storage.sync
+                .set({
+                  listData: listData,
+                })
+                .then(() => {
+                  this.doNotUpdate = false;
+                });
               this.$message.success('基金添加成功');
             }
           } else {
             this.$message.warning('未找到该基金');
-            return;
+            this.doNotUpdate = false;
           }
         });
       }
@@ -248,9 +261,9 @@ export default {
       }
 
       Promise.all(promises).then(res => {
-        if (res.length > 0) {
+        if (res.length > 0 && !this.doNotUpdate) {
           this.listData = res;
-          chrome.storage.sync.set({
+          browser.storage.sync.set({
             listData: res,
           });
         }
@@ -261,6 +274,8 @@ export default {
      */
     removeData(event) {
       const that = this;
+      this.doNotUpdate = true;
+
       this.$confirm({
         title: '删除提示',
         content: '您确定要删除该' + (event.type == 'stock' ? '股票' : '基金'),
@@ -273,10 +288,14 @@ export default {
           let listData = that.listData;
           listData.splice(index, 1);
           that.listData = listData;
-          chrome.storage.sync.set({
+          browser.storage.sync.set({
             listData: listData,
           });
           that.$message.success((event.type == 'stock' ? '股票' : '基金') + '删除成功');
+          that.doNotUpdate = false;
+        },
+        onCancel() {
+          that.doNotUpdate = false;
         },
       });
     },
