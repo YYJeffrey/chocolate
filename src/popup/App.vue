@@ -110,10 +110,11 @@ export default {
     this.getStockBoard();
     this.updateListData();
 
-    if (!util.isDealingTime()) {
+    if (util.isDealingTime()) {
       setInterval(() => {
+        this.getStockBoard();
+
         if (!this.doNotUpdate) {
-          this.getStockBoard();
           this.updateListData();
         }
       }, 3800);
@@ -200,8 +201,8 @@ export default {
                 })
                 .then(() => {
                   this.doNotUpdate = false;
+                  this.$message.success('股票添加成功');
                 });
-              this.$message.success('股票添加成功');
             }
           } else {
             this.$message.warning('未找到该股票');
@@ -223,8 +224,8 @@ export default {
                 })
                 .then(() => {
                   this.doNotUpdate = false;
+                  this.$message.success('基金添加成功');
                 });
-              this.$message.success('基金添加成功');
             }
           } else {
             this.$message.warning('未找到该基金');
@@ -288,11 +289,14 @@ export default {
           let listData = that.listData;
           listData.splice(index, 1);
           that.listData = listData;
-          browser.storage.sync.set({
-            listData: listData,
-          });
-          that.$message.success((event.type == 'stock' ? '股票' : '基金') + '删除成功');
-          that.doNotUpdate = false;
+          browser.storage.sync
+            .set({
+              listData: listData,
+            })
+            .then(() => {
+              that.$message.success((event.type == 'stock' ? '股票' : '基金') + '删除成功');
+              that.doNotUpdate = false;
+            });
         },
         onCancel() {
           that.doNotUpdate = false;
