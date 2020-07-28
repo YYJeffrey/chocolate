@@ -1,6 +1,6 @@
 <template>
   <div>
-    <p>Hello world!</p>
+    <p>左脑编程，右脑写诗</p>
   </div>
 </template>
 
