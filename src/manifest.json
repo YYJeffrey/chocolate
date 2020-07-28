@@ -3,11 +3,6 @@
   "description": "一款查看自选股票和基金的助手，为您提供最新最快的财富动态。",
   "version": "0.0.1",
   "manifest_version": 2,
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "YYJeffrey@github.com"
-    }
-  },
   "icons": {
     "48": "icons/icon_48.png",
     "128": "icons/icon_128.png"
@@ -17,14 +12,8 @@
     "default_popup": "popup/popup.html"
   },
   "background": {
-    "scripts": ["browser-polyfill.js", "background.js"]
+    "scripts": ["background.js"]
   },
-  "content_scripts": [
-    {
-      "matches": ["*://*/*"],
-      "js": ["browser-polyfill.js", "content.js"]
-    }
-  ],
   "options_ui": {
     "page": "options/options.html",
     "chrome_style": true

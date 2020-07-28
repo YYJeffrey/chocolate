@@ -88,7 +88,6 @@
 
 <script>
 import util from '../util/util';
-const browser = require('webextension-polyfill');
 
 export default {
   data() {
@@ -101,8 +100,8 @@ export default {
     };
   },
   mounted() {
-    browser.storage.sync.get('listData').then(res => {
-      if ('listData' in res) {
+    chrome.storage.sync.get('listData', res => {
+      if (res.listData) {
         this.listData = res.listData;
       }
     });
@@ -195,14 +194,11 @@ export default {
               this.doNotUpdate = false;
             } else {
               listData.push(res);
-              browser.storage.sync
-                .set({
-                  listData: listData,
-                })
-                .then(() => {
-                  this.doNotUpdate = false;
-                  this.$message.success('股票添加成功');
-                });
+
+              chrome.storage.sync.set({ listData: listData }, () => {
+                this.doNotUpdate = false;
+                this.$message.success('股票添加成功');
+              });
             }
           } else {
             this.$message.warning('未找到该股票');
@@ -218,14 +214,11 @@ export default {
               this.doNotUpdate = false;
             } else {
               listData.push(res);
-              browser.storage.sync
-                .set({
-                  listData: listData,
-                })
-                .then(() => {
-                  this.doNotUpdate = false;
-                  this.$message.success('基金添加成功');
-                });
+
+              chrome.storage.sync.set({ listData: listData }, () => {
+                this.doNotUpdate = false;
+                this.$message.success('基金添加成功');
+              });
             }
           } else {
             this.$message.warning('未找到该基金');
@@ -264,9 +257,8 @@ export default {
       Promise.all(promises).then(res => {
         if (res.length > 0 && !this.doNotUpdate) {
           this.listData = res;
-          browser.storage.sync.set({
-            listData: res,
-          });
+
+          chrome.storage.sync.set({ listData: res });
         }
       });
     },
@@ -289,14 +281,11 @@ export default {
           let listData = that.listData;
           listData.splice(index, 1);
           that.listData = listData;
-          browser.storage.sync
-            .set({
-              listData: listData,
-            })
-            .then(() => {
-              that.$message.success((event.type == 'stock' ? '股票' : '基金') + '删除成功');
-              that.doNotUpdate = false;
-            });
+
+          chrome.storage.sync.set({ listData: listData }, () => {
+            that.$message.success((event.type == 'stock' ? '股票' : '基金') + '删除成功');
+            that.doNotUpdate = false;
+          });
         },
         onCancel() {
           that.doNotUpdate = false;
