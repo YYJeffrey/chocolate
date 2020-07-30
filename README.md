@@ -13,6 +13,11 @@
 - webextension-polyfill：https://github.com/mozilla/webextension-polyfill/
 - Ant Design Vue：https://github.com/vueComponent/ant-design-vue/
 
+## 插件安装
+
+- Chrome 插件商店安装：[下载地址](https://chrome.google.com/webstore/detail/%E8%82%A1%E7%A5%A8%E5%9F%BA%E9%87%91%E5%8A%A9%E6%89%8B/mebdnpnlnndmpeaomicjibfkhnjlbjgi?hl=zh-CN&authuser=0)
+- Firefox 插件商店安装：[下载地址](https://addons.mozilla.org/zh-CN/firefox/addon/%E8%82%A1%E7%A5%A8%E5%9F%BA%E9%87%91%E5%8A%A9%E6%89%8B/?src=search)
+
 ## 快速开始
 
 1. 下载源码
