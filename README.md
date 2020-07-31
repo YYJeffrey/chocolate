@@ -10,7 +10,6 @@
 ## 技术栈
 
 - vue-web-extension：https://github.com/Kocal/vue-web-extension/
-- webextension-polyfill：https://github.com/mozilla/webextension-polyfill/
 - Ant Design Vue：https://github.com/vueComponent/ant-design-vue/
 
 ## 插件安装
