@@ -5,8 +5,12 @@
         <span class="card-title">{{ item.name }}</span>
         <span :class="'index ' + (item.priceChange >= 0 ? 'red' : 'green')">{{ item.price }}</span>
         <div class="increase-box">
-          <span :class="'increase-number ' + (item.priceChange >= 0 ? 'red' : 'green')">{{ (item.priceChange > 0 ? '+' : '') + item.priceChange }}</span>
-          <span :class="'increase-percent ' + (item.priceChange >= 0 ? 'red' : 'green')">{{ (item.changePercent > 0 ? '+' : '') + item.changePercent + '%' }}</span>
+          <span
+            :class="'increase-number ' + (item.priceChange >= 0 ? 'red' : 'green')"
+          >{{ (item.priceChange > 0 ? '+' : '') + item.priceChange }}</span>
+          <span
+            :class="'increase-percent ' + (item.priceChange >= 0 ? 'red' : 'green')"
+          >{{ (item.changePercent > 0 ? '+' : '') + item.changePercent + '%' }}</span>
         </div>
       </a-card-grid>
     </a-card>
@@ -17,7 +21,13 @@
           <a-select-option value="stock">股票</a-select-option>
           <a-select-option value="fund">基金</a-select-option>
         </a-select>
-        <a-input-search class="search-bar" :placeholder="searchType === 'stock' ? '请输入股票代码' : '请输入基金代码'" enter-button="添加" maxlength="12" @search="onSearch" />
+        <a-input-search
+          class="search-bar"
+          :placeholder="searchType === 'stock' ? '请输入股票代码' : '请输入基金代码'"
+          enter-button="添加"
+          maxlength="12"
+          @search="onSearch"
+        />
       </a-input-group>
 
       <div class="support-box">
@@ -36,7 +46,13 @@
       </a-modal>
     </div>
 
-    <a-table v-if="listData && listData.length > 0" class="table" :data-source="listData" :pagination="false" size="small">
+    <a-table
+      v-if="listData && listData.length > 0"
+      class="table"
+      :data-source="listData"
+      :pagination="false"
+      size="small"
+    >
       <a-table-column title="名称" data-index="name" align="center">
         <template slot-scope="text, record">
           <span class="table-column bold">{{ record.name }}</span>
@@ -60,7 +76,9 @@
         "
       >
         <template slot-scope="text, record">
-          <span :class="'table-column bold ' + (record.percent >= 0 ? 'red' : 'green')">{{ record.price }}</span>
+          <span
+            :class="'table-column bold ' + (record.percent >= 0 ? 'red' : 'green')"
+          >{{ record.price }}</span>
         </template>
       </a-table-column>
       <a-table-column
@@ -74,7 +92,9 @@
         "
       >
         <template slot-scope="percent">
-          <span :class="'table-column ' + (percent >= 0 ? 'red' : 'green')">{{ (percent >= 0 ? '+' : '') + percent + '%' }}</span>
+          <span
+            :class="'table-column ' + (percent >= 0 ? 'red' : 'green')"
+          >{{ (percent >= 0 ? '+' : '') + percent + '%' }}</span>
         </template>
       </a-table-column>
       <a-table-column title="操作" align="center">
@@ -104,10 +124,10 @@ export default {
       if (res.listData) {
         this.listData = res.listData;
       }
+      this.updateListData();
     });
 
     this.getStockBoard();
-    this.updateListData();
 
     if (util.isDealingTime()) {
       setInterval(() => {
