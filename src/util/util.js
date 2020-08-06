@@ -18,6 +18,25 @@ function isDealingTime() {
   return false;
 }
 
+/**
+ * 是否为交易日午休时间
+ */
+function isNoonBreakTime() {
+  const date = new Date();
+  const day = date.getDay();
+
+  if (day !== 0 && day !== 6) {
+    const endAMTime = new Date(new Date().setHours(11, 30, 0, 0));
+    const startPMTime = new Date(new Date().setHours(13, 0, 0, 0));
+
+    if (date >= endAMTime && date <= startPMTime) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export default {
   isDealingTime,
+  isNoonBreakTime,
 };
