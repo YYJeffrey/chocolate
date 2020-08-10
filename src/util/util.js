@@ -34,6 +34,10 @@ function isDealingTime() {
  * @param {日期字符串} str 
  */
 function isToday(str) {
+  if (str == null) {
+    return false
+  }
+
   const d = new Date(str.replace(/-/g, "/"));
   const todaysDate = new Date();
   if (d.setHours(0, 0, 0, 0) == todaysDate.setHours(0, 0, 0, 0)) {
