@@ -5,12 +5,8 @@
         <span class="card-title">{{ item.name }}</span>
         <span :class="'index ' + (item.priceChange >= 0 ? 'red' : 'green')">{{ item.price }}</span>
         <div class="increase-box">
-          <span
-            :class="'increase-number ' + (item.priceChange >= 0 ? 'red' : 'green')"
-          >{{ (item.priceChange > 0 ? '+' : '') + item.priceChange }}</span>
-          <span
-            :class="'increase-percent ' + (item.priceChange >= 0 ? 'red' : 'green')"
-          >{{ (item.changePercent > 0 ? '+' : '') + item.changePercent + '%' }}</span>
+          <span :class="'increase-number ' + (item.priceChange >= 0 ? 'red' : 'green')">{{ (item.priceChange > 0 ? '+' : '') + item.priceChange }}</span>
+          <span :class="'increase-percent ' + (item.priceChange >= 0 ? 'red' : 'green')">{{ (item.changePercent > 0 ? '+' : '') + item.changePercent + '%' }}</span>
         </div>
       </a-card-grid>
     </a-card>
@@ -21,13 +17,7 @@
           <a-select-option value="stock">股票</a-select-option>
           <a-select-option value="fund">基金</a-select-option>
         </a-select>
-        <a-input-search
-          class="search-bar"
-          :placeholder="searchType === 'stock' ? '请输入股票代码' : '请输入基金代码'"
-          enter-button="添加"
-          maxlength="12"
-          @search="onSearch"
-        />
+        <a-input-search class="search-bar" :placeholder="searchType === 'stock' ? '请输入股票代码' : '请输入基金代码'" enter-button="添加" maxlength="12" @search="onSearch" />
       </a-input-group>
 
       <div class="support-box">
@@ -46,13 +36,7 @@
       </a-modal>
     </div>
 
-    <a-table
-      v-if="listData && listData.length > 0"
-      class="table"
-      :data-source="listData"
-      :pagination="false"
-      size="small"
-    >
+    <a-table v-if="listData && listData.length > 0" class="table" :data-source="listData" :pagination="false" size="small">
       <a-table-column title="名称" data-index="name" align="center">
         <template slot-scope="text, record">
           <span class="table-column bold">{{ record.name }}</span>
@@ -76,9 +60,7 @@
         "
       >
         <template slot-scope="text, record">
-          <span
-            :class="'table-column bold ' + (record.percent >= 0 ? 'red' : 'green')"
-          >{{ record.price }}</span>
+          <span :class="'table-column bold ' + (record.percent >= 0 ? 'red' : 'green')">{{ record.price }}</span>
         </template>
       </a-table-column>
       <a-table-column
@@ -92,9 +74,7 @@
         "
       >
         <template slot-scope="percent">
-          <span
-            :class="'table-column ' + (percent >= 0 ? 'red' : 'green')"
-          >{{ (percent >= 0 ? '+' : '') + percent + '%' }}</span>
+          <span :class="'table-column ' + (percent >= 0 ? 'red' : 'green')">{{ (percent >= 0 ? '+' : '') + percent + '%' }}</span>
         </template>
       </a-table-column>
       <a-table-column title="操作" align="center">
@@ -114,7 +94,6 @@ export default {
     return {
       searchType: 'stock',
       showQrModal: false,
-      doNotUpdate: false,
       stockBoard: [],
       listData: [],
     };
@@ -124,7 +103,7 @@ export default {
       if (res.listData) {
         this.listData = res.listData;
       }
-      this.updateListData();
+      this.updateListData(true);
     });
 
     this.getStockBoard();
@@ -132,10 +111,7 @@ export default {
     if (util.isDealingTime()) {
       setInterval(() => {
         this.getStockBoard();
-
-        if (!this.doNotUpdate) {
-          this.updateListData();
-        }
+        this.updateListData();
       }, 3800);
     }
   },
@@ -204,25 +180,21 @@ export default {
      */
     onSearch(code) {
       let listData = this.listData;
-      this.doNotUpdate = true;
 
       if (this.searchType === 'stock') {
         this.getStockData(code).then(res => {
           if ('code' in res) {
             if (this.getDataIndexByCode(res.code) != -1) {
               this.$message.warning('不可重复添加股票');
-              this.doNotUpdate = false;
             } else {
               listData.push(res);
 
               chrome.storage.sync.set({ listData: listData }, () => {
-                this.doNotUpdate = false;
                 this.$message.success('股票添加成功');
               });
             }
           } else {
             this.$message.warning('未找到该股票');
-            this.doNotUpdate = false;
           }
         });
       }
@@ -231,18 +203,15 @@ export default {
           if ('code' in res) {
             if (this.getDataIndexByCode(res.code) != -1) {
               this.$message.warning('不可重复添加基金');
-              this.doNotUpdate = false;
             } else {
               listData.push(res);
 
               chrome.storage.sync.set({ listData: listData }, () => {
-                this.doNotUpdate = false;
                 this.$message.success('基金添加成功');
               });
             }
           } else {
             this.$message.warning('未找到该基金');
-            this.doNotUpdate = false;
           }
         });
       }
@@ -261,15 +230,14 @@ export default {
     /**
      * 更新列表数据
      */
-    updateListData() {
+    updateListData(updateStorage = false) {
       let promises = [];
 
       for (const index in this.listData) {
         const item = this.listData[index];
         if (item.type === 'stock') {
           promises.push(this.getStockData(item.code));
-        }
-        if (item.type === 'fund') {
+        } else if (item.type === 'fund') {
           promises.push(this.getFundData(item.code));
         }
       }
@@ -278,7 +246,9 @@ export default {
         if (res.length > 0) {
           this.listData = res;
 
-          chrome.storage.sync.set({ listData: res });
+          if (updateStorage) {
+            chrome.storage.sync.set({ listData: res });
+          }
         }
       });
     },
@@ -287,11 +257,10 @@ export default {
      */
     removeData(event) {
       const that = this;
-      this.doNotUpdate = true;
 
       this.$confirm({
         title: '删除提示',
-        content: '您确定要删除该' + (event.type == 'stock' ? '股票' : '基金'),
+        content: `您确定要删除该${event.type == 'stock' ? '股票' : '基金'}`,
         okText: '确定',
         okType: 'danger',
         cancelText: '取消',
@@ -303,12 +272,8 @@ export default {
           that.listData = listData;
 
           chrome.storage.sync.set({ listData: listData }, () => {
-            that.$message.success((event.type == 'stock' ? '股票' : '基金') + '删除成功');
-            that.doNotUpdate = false;
+            that.$message.success(`${event.type == 'stock' ? '股票' : '基金'}删除成功`);
           });
-        },
-        onCancel() {
-          that.doNotUpdate = false;
         },
       });
     },
