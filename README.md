@@ -38,3 +38,10 @@
 <img src="./screenshot/p3.png" width="520px" /><br/>
 
 特别鸣谢：ICON 来源——by@我是一台图标制造机（iconfont@iconchan）
+
+## 更新记录
+### v0.0.2
+* 修复已知影响使用的bug
+
+### v0.0.1
+* 完成主要业务功能发布第一版插件
