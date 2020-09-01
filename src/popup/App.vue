@@ -263,7 +263,7 @@ export default {
       }
 
       Promise.all(promises).then(res => {
-        if (res.length > 0 && res.length == this.listData.length) {
+        if (res.length > 0 && res.length == this.listData.length && 'code' in res[0]) {
           this.listData = res;
 
           if (updateStorage) {
