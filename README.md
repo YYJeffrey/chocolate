@@ -31,6 +31,11 @@
 3. 运行项目  
    如果你需要进行二次开发可以使用`npm run watch`进行热编译部署，如果你只需要打包则运行`npm run build`。
 
+## 数据源
+
+* 股票数据源：[东方财富网](https://www.eastmoney.com/)
+* 基金数据源：[天天基金网](https://fund.eastmoney.com/)
+
 ## 产品展示
 
 <img src="./screenshot/p1.png" width="520px" /><br/>
@@ -40,6 +45,10 @@
 特别鸣谢：ICON 来源——by@我是一台图标制造机（iconfont@iconchan）
 
 ## 更新记录
+### v0.0.2
+* 切换了数据源，提升了响应性能
+* 修复由缓存导致的bug
+
 ### v0.0.2
 * 修复已知影响使用的bug
 
