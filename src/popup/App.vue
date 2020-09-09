@@ -125,10 +125,9 @@ export default {
       }
       this.updateListData(true);
     });
-
     this.getStockBoard();
 
-    if (!util.isDealingTime()) {
+    if (util.isDealingTime()) {
       setInterval(() => {
         this.getStockBoard();
         this.updateListData();
