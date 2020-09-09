@@ -31,7 +31,7 @@ function isDealingTime() {
 
 /**
  * 是否是今天
- * @param {日期字符串} str 
+ * @param str 时间字符串
  */
 function isToday(str) {
   if (str == null) {
@@ -46,8 +46,32 @@ function isToday(str) {
   return false;
 }
 
+/**
+ * 数字位数补全
+ * @param number 需要补全的数字
+ * @param bit 补全为几位小数
+ */
+function changeDecimalAddZero(number, bit) {
+  const f = parseFloat(number);
+  if (isNaN(f)) {
+    return 0;
+  }
+  let s = number.toString();
+  let pos_decimal = s.indexOf('.');
+
+  if (pos_decimal == -1) {
+    pos_decimal = s.length;
+    s += '.';
+  }
+  while (s.length <= pos_decimal + bit) {
+    s += '0';
+  }
+  return s;
+}
+
 export default {
   isDealingDay,
   isDealingTime,
-  isToday
+  isToday,
+  changeDecimalAddZero
 };

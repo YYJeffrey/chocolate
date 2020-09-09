@@ -1,16 +1,16 @@
 <template>
   <div class="content">
     <a-card class="card">
-      <a-card-grid v-for="item in stockBoard" :key="item.code" class="card-grid">
-        <span class="card-title">{{ item.name }}</span>
-        <span :class="'index ' + (item.priceChange >= 0 ? 'red' : 'green')">{{ item.price }}</span>
+      <a-card-grid v-for="item in stockBoard" :key="item.f12" class="card-grid">
+        <span class="card-title">{{ item.f14 }}</span>
+        <span :class="'index ' + (item.f3 >= 0 ? 'red' : 'green')">{{ item.f2|changeTwoDecimal }}</span>
         <div class="increase-box">
           <span
-            :class="'increase-number ' + (item.priceChange >= 0 ? 'red' : 'green')"
-          >{{ (item.priceChange > 0 ? '+' : '') + item.priceChange }}</span>
+            :class="'increase-number ' + (item.f4 >= 0 ? 'red' : 'green')"
+          >{{ item.f4|changeTwoDecimalAndAddSymbol }}</span>
           <span
-            :class="'increase-percent ' + (item.priceChange >= 0 ? 'red' : 'green')"
-          >{{ (item.changePercent > 0 ? '+' : '') + item.changePercent + '%' }}</span>
+            :class="'increase-percent ' + (item.f3 >= 0 ? 'red' : 'green')"
+          >{{ item.f3|changeTwoDecimalAndAddSymbol }}%</span>
         </div>
       </a-card-grid>
     </a-card>
@@ -78,7 +78,7 @@
         <template slot-scope="text, record">
           <span
             :class="'table-column bold ' + (record.percent >= 0 ? 'red' : 'green')"
-          >{{ record.price }}</span>
+          >{{ record.price|changeTwoDecimal }}</span>
         </template>
       </a-table-column>
       <a-table-column
@@ -94,7 +94,7 @@
         <template slot-scope="percent">
           <span
             :class="'table-column ' + (percent >= 0 ? 'red' : 'green')"
-          >{{ (percent >= 0 ? '+' : '') + percent + '%' }}</span>
+          >{{ percent|changeTwoDecimalAndAddSymbol }}%</span>
         </template>
       </a-table-column>
       <a-table-column title="操作" align="center">
@@ -128,22 +128,36 @@ export default {
 
     this.getStockBoard();
 
-    if (util.isDealingTime()) {
+    if (!util.isDealingTime()) {
       setInterval(() => {
         this.getStockBoard();
         this.updateListData();
       }, 3800);
     }
   },
+  filters: {
+    /**
+     * 补全小数
+     */
+    changeTwoDecimal(val) {
+      return util.changeDecimalAddZero(val, 2);
+    },
+    /**
+     * 补全小数并添加符号
+     */
+    changeTwoDecimalAndAddSymbol(val) {
+      return (val >= 0 ? '+' : '') + util.changeDecimalAddZero(val, 2);
+    },
+  },
   methods: {
     /**
      * 获取大盘指数
      */
     getStockBoard() {
-      const url = '/stock/board';
+      const url = 'https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&fields=f2,f3,f4,f12,f14&secids=1.000001,1.000300,1.000905,0.399001,0.399005,0.399006';
       this.$axios.get(url).then(res => {
-        if (res.data.code === 200) {
-          this.stockBoard = res.data.data;
+        if (res.status == 200 && res.data.data) {
+          this.stockBoard = res.data.data.diff;
         }
       });
     },
@@ -152,20 +166,33 @@ export default {
      */
     getStockData(code) {
       return new Promise(resolve => {
-        const url = '/stock/detail?code=' + code;
+        const url = `https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&fields=f2,f3,f4,f12,f14&secids=1.${code},0.${code}`;
+        let stocks = [];
 
-        this.$axios.get(url).then(res => {
-          let info = {};
-          if (res.data.code === 200) {
-            const data = res.data.data;
-            info.name = data.name;
-            info.code = data.code;
-            info.price = parseFloat(data.price);
-            info.percent = parseFloat(data.changePercent);
-            info.type = 'stock';
-          }
-          resolve(info);
-        });
+        this.$axios
+          .get(url)
+          .then(res => {
+            if (res.status == 200 && res.data.data) {
+              const data = res.data.data.diff;
+              for (const i in data) {
+                let stock = {};
+                stock.name = data[i].f14;
+                stock.code = data[i].f12;
+                stock.price = data[i].f2;
+                stock.percent = data[i].f3;
+                stock.type = 'stock';
+                stocks.push(stock);
+              }
+            }
+            if (stocks.length == 2) {
+              resolve(stocks[1]);
+            } else {
+              resolve(stocks[0]);
+            }
+          })
+          .catch(res => {
+            resolve(null);
+          });
       });
     },
     /**
@@ -173,20 +200,28 @@ export default {
      */
     getFundData(code) {
       return new Promise(resolve => {
-        const url = '/fund/detail?code=' + code;
+        const url = `https://fundgz.1234567.com.cn/js/${code}.js`;
+        let fund = {};
 
-        this.$axios.get(url).then(res => {
-          let info = {};
-          if (res.data.code === 200) {
-            const data = res.data.data;
-            info.name = data.name;
-            info.code = data.code;
-            info.price = util.isDealingTime() || (util.isDealingDay() && !util.isToday(data.netWorthDate)) ? data.expectWorth : data.netWorth;
-            info.percent = util.isDealingTime() || (util.isDealingDay() && !util.isToday(data.netWorthDate)) ? parseFloat(data.expectGrowth) : parseFloat(data.dayGrowth);
-            info.type = 'fund';
-          }
-          resolve(info);
-        });
+        this.$axios
+          .get(url)
+          .then(res => {
+            if (res.status == 200 && res.data) {
+              const data = res.data.match(/\{(.+?)\}/);
+              if (data) {
+                const info = JSON.parse(data[0]);
+                fund.name = info.name;
+                fund.code = info.fundcode;
+                fund.price = util.isDealingTime() || (util.isDealingDay() && !util.isToday(info.gztime)) ? parseFloat(info.gsz) : parseFloat(info.dwjz);
+                fund.percent = parseFloat(info.gszzl);
+                fund.type = 'fund';
+              }
+            }
+            resolve(fund);
+          })
+          .catch(res => {
+            resolve(null);
+          });
       });
     },
     /**
@@ -203,12 +238,11 @@ export default {
 
       if (this.searchType === 'stock') {
         this.getStockData(code).then(res => {
-          if ('code' in res) {
-            if (this.getDataIndexByCode(res.code) != -1) {
+          if (res && 'code' in res) {
+            if (this.getDataIndex(res.code, res.type, res.name) != -1) {
               this.$message.warning('不可重复添加股票');
             } else {
               listData.push(res);
-
               chrome.storage.sync.set({ listData: listData }, () => {
                 this.$message.success('股票添加成功');
               });
@@ -218,14 +252,14 @@ export default {
           }
         });
       }
+
       if (this.searchType === 'fund') {
         this.getFundData(code).then(res => {
-          if ('code' in res) {
-            if (this.getDataIndexByCode(res.code) != -1) {
+          if (res && 'code' in res) {
+            if (this.getDataIndex(res.code, res.type, res.name) != -1) {
               this.$message.warning('不可重复添加基金');
             } else {
               listData.push(res);
-
               chrome.storage.sync.set({ listData: listData }, () => {
                 this.$message.success('基金添加成功');
               });
@@ -237,11 +271,11 @@ export default {
       }
     },
     /**
-     * 通过code查询数据下标
+     * 通过code、type、name查询数据下标
      */
-    getDataIndexByCode(code) {
+    getDataIndex(code, type, name) {
       for (const index in this.listData) {
-        if (code == this.listData[index].code) {
+        if (code == this.listData[index].code && type == this.listData[index].type && name == this.listData[index].name) {
           return index;
         }
       }
@@ -286,7 +320,7 @@ export default {
         cancelText: '取消',
         width: 300,
         onOk() {
-          const index = that.getDataIndexByCode(event.code);
+          const index = that.getDataIndex(event.code, event.type, event.name);
           let listData = that.listData;
           listData.splice(index, 1);
           that.listData = listData;
