@@ -3,14 +3,10 @@
     <a-card class="card">
       <a-card-grid v-for="item in stockBoard" :key="item.f12" class="card-grid">
         <span class="card-title">{{ item.f14 }}</span>
-        <span :class="'index ' + (item.f3 >= 0 ? 'red' : 'green')">{{ item.f2|changeTwoDecimal }}</span>
+        <span :class="'index ' + (item.f3 >= 0 ? 'red' : 'green')">{{ item.f2 | changeTwoDecimal }}</span>
         <div class="increase-box">
-          <span
-            :class="'increase-number ' + (item.f4 >= 0 ? 'red' : 'green')"
-          >{{ item.f4|changeTwoDecimalAndAddSymbol }}</span>
-          <span
-            :class="'increase-percent ' + (item.f3 >= 0 ? 'red' : 'green')"
-          >{{ item.f3|changeTwoDecimalAndAddSymbol }}%</span>
+          <span :class="'increase-number ' + (item.f4 >= 0 ? 'red' : 'green')">{{ item.f4 | changeTwoDecimalAndAddSymbol }}</span>
+          <span :class="'increase-percent ' + (item.f3 >= 0 ? 'red' : 'green')">{{ item.f3 | changeTwoDecimalAndAddSymbol }}%</span>
         </div>
       </a-card-grid>
     </a-card>
@@ -23,9 +19,11 @@
         </a-select>
         <a-input-search
           class="search-bar"
+          v-model="searchKey"
           :placeholder="searchType === 'stock' ? '请输入股票代码' : '请输入基金代码'"
           enter-button="添加"
           maxlength="12"
+          allowClear
           @search="onSearch"
         />
       </a-input-group>
@@ -46,13 +44,7 @@
       </a-modal>
     </div>
 
-    <a-table
-      v-if="listData && listData.length > 0"
-      class="table"
-      :data-source="listData"
-      :pagination="false"
-      size="small"
-    >
+    <a-table v-if="listData && listData.length > 0" class="table" :data-source="listData" :pagination="false" size="small">
       <a-table-column title="名称" data-index="name" align="center">
         <template slot-scope="text, record">
           <span class="table-column bold">{{ record.name }}</span>
@@ -76,9 +68,7 @@
         "
       >
         <template slot-scope="text, record">
-          <span
-            :class="'table-column bold ' + (record.percent >= 0 ? 'red' : 'green')"
-          >{{ record.price|changeTwoDecimal }}</span>
+          <span :class="'table-column bold ' + (record.percent >= 0 ? 'red' : 'green')">{{ record.price | changeTwoDecimal }}</span>
         </template>
       </a-table-column>
       <a-table-column
@@ -92,9 +82,7 @@
         "
       >
         <template slot-scope="percent">
-          <span
-            :class="'table-column ' + (percent >= 0 ? 'red' : 'green')"
-          >{{ percent|changeTwoDecimalAndAddSymbol }}%</span>
+          <span :class="'table-column ' + (percent >= 0 ? 'red' : 'green')">{{ percent | changeTwoDecimalAndAddSymbol }}%</span>
         </template>
       </a-table-column>
       <a-table-column title="操作" align="center">
@@ -113,6 +101,7 @@ export default {
   data() {
     return {
       searchType: 'stock',
+      searchKey: null,
       showQrModal: false,
       stockBoard: [],
       listData: [],
@@ -233,6 +222,10 @@ export default {
      * 搜索股票或基金
      */
     onSearch(code) {
+      if (code == null || code == '') {
+        return;
+      }
+
       let listData = this.listData;
 
       if (this.searchType === 'stock') {
@@ -245,6 +238,7 @@ export default {
               chrome.storage.sync.set({ listData: listData }, () => {
                 this.$message.success('股票添加成功');
               });
+              this.searchKey = null;
             }
           } else {
             this.$message.warning('未找到该股票');
@@ -262,6 +256,7 @@ export default {
               chrome.storage.sync.set({ listData: listData }, () => {
                 this.$message.success('基金添加成功');
               });
+              this.searchKey = null;
             }
           } else {
             this.$message.warning('未找到该基金');
