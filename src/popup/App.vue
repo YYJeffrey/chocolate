@@ -222,7 +222,7 @@ export default {
      * 搜索股票或基金
      */
     onSearch(code) {
-      if (code == null || code == '') {
+      if (code == null || code.replace(/(\s*$)/g, '') == '') {
         return;
       }
 
