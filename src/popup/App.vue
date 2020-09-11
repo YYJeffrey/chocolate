@@ -3,10 +3,10 @@
     <a-card class="card">
       <a-card-grid v-for="item in stockBoard" :key="item.f12" class="card-grid">
         <span class="card-title">{{ item.f14 }}</span>
-        <span :class="'index ' + (item.f3 >= 0 ? 'red' : 'green')">{{ item.f2 | changeTwoDecimal }}</span>
+        <span :class="'index ' + (item.f4 >= 0 ? 'red' : 'green')">{{ item.f2 | changeTwoDecimal }}</span>
         <div class="increase-box">
           <span :class="'increase-number ' + (item.f4 >= 0 ? 'red' : 'green')">{{ item.f4 | changeTwoDecimalAndAddSymbol }}</span>
-          <span :class="'increase-percent ' + (item.f3 >= 0 ? 'red' : 'green')">{{ item.f3 | changeTwoDecimalAndAddSymbol }}%</span>
+          <span :class="'increase-percent ' + (item.f4 >= 0 ? 'red' : 'green')">{{ item.f3 | changeTwoDecimalAndAddSymbol }}%</span>
         </div>
       </a-card-grid>
     </a-card>
