@@ -12,6 +12,12 @@
 - vue-web-extension：https://github.com/Kocal/vue-web-extension/
 - Ant Design Vue：https://github.com/vueComponent/ant-design-vue/
 
+## 依赖版本
+
+- **ant-design-vue**: 1.6.5
+- **axios**: 0.20.0
+- **vue**: 2.6.12
+
 ## 插件安装
 
 - Chrome 插件商店安装：[下载地址](https://chrome.google.com/webstore/detail/%E8%82%A1%E7%A5%A8%E5%9F%BA%E9%87%91%E5%8A%A9%E6%89%8B/mebdnpnlnndmpeaomicjibfkhnjlbjgi?hl=zh-CN&authuser=0)
@@ -49,6 +55,7 @@
 ### v0.0.4
 
 - 修复交互细节
+- 解决了火狐插件商城发布问题
 
 ### v0.0.3
 
