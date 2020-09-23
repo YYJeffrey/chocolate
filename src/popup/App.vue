@@ -349,7 +349,6 @@ export default {
       height: 80px;
       box-sizing: border-box;
       text-align: center;
-      cursor: pointer;
 
       .card-title {
         color: #141414;
