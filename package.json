@@ -1,11 +1,15 @@
 {
   "name": "chocolate",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "description": "A data assistant for selected stocks and funds.",
   "author": "Jeffrey",
   "license": "GPL-3.0",
   "engines": {
     "node": ">=10"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YYJeffrey/chocolate"
   },
   "scripts": {
     "lint": "eslint --ext .js,.vue src",
@@ -24,7 +28,7 @@
   },
   "dependencies": {
     "ant-design-vue": "1.6.5",
-    "axios": "0.20.0",
+    "axios": "0.27.2",
     "vue": "2.6.12"
   },
   "devDependencies": {
@@ -60,7 +64,7 @@
     "pretty-quick": "^1.8.0",
     "sass-loader": "^7.1.0",
     "vue-loader": "^15.4.2",
-    "vue-template-compiler": "^2.6.10",
+    "vue-template-compiler": "2.6.12",
     "webpack": "^4.20.2",
     "webpack-cli": "^3.3.10",
     "webpack-extension-reloader": "^1.1.0"

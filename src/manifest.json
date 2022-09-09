@@ -1,22 +1,19 @@
 {
   "name": "股票基金助手",
   "description": "一款查看自选股票和基金的助手，为您提供最新最快的财富动态。",
-  "version": "0.0.5",
-  "manifest_version": 2,
+  "version": "0.1.0",
+  "manifest_version": 3,
   "icons": {
     "48": "icons/icon_48.png",
     "128": "icons/icon_128.png"
   },
-  "browser_action": {
+  "action": {
     "default_title": "股票基金助手",
     "default_popup": "popup/popup.html"
   },
   "background": {
-    "scripts": ["background.js"]
+    "service_worker": "./background.js"
   },
-  "options_ui": {
-    "page": "options/options.html",
-    "chrome_style": true
-  },
-  "permissions": ["storage", "https://fundgz.1234567.com.cn/*", "https://push2.eastmoney.com/*"]
+  "permissions": ["storage"],
+  "host_permissions": ["https://push2.eastmoney.com/*", "https://fundsuggest.eastmoney.com/*", "https://api.doctorxiong.club/*"]
 }

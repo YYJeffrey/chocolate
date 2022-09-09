@@ -26,7 +26,7 @@ function isDealingTime() {
       return true;
     }
   }
-  return false
+  return false;
 }
 
 /**
@@ -35,12 +35,12 @@ function isDealingTime() {
  */
 function isToday(str) {
   if (str == null) {
-    return false
+    return false;
   }
 
-  const d = new Date(str.replace(/-/g, "/"));
+  const d = new Date(str.replace(/-/g, '/'));
   const todaysDate = new Date();
-  if (d.setHours(0, 0, 0, 0) == todaysDate.setHours(0, 0, 0, 0)) {
+  if (d.setHours(0, 0, 0, 0) === todaysDate.setHours(0, 0, 0, 0)) {
     return true;
   }
   return false;
@@ -57,21 +57,28 @@ function changeDecimalAddZero(number, bit) {
     return 0;
   }
   let s = number.toString();
-  let pos_decimal = s.indexOf('.');
+  let posDecimal = s.indexOf('.');
 
-  if (pos_decimal == -1) {
-    pos_decimal = s.length;
+  if (posDecimal === -1) {
+    posDecimal = s.length;
     s += '.';
   }
-  while (s.length <= pos_decimal + bit) {
+  while (s.length <= posDecimal + bit) {
     s += '0';
   }
   return s;
+}
+
+let timeout = null;
+function debounce(fn, wait = 500) {
+  if (timeout !== null) clearTimeout(timeout);
+  timeout = setTimeout(fn, wait);
 }
 
 export default {
   isDealingDay,
   isDealingTime,
   isToday,
-  changeDecimalAddZero
+  changeDecimalAddZero,
+  debounce,
 };
