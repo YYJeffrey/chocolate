@@ -2,18 +2,17 @@
   "name": "股票基金助手",
   "description": "一款界面美观、功能简约的课自定义添加股票和基金的助手，添加浏览器插件后，轻点右上角即可查看实时的财富动态。",
   "version": "0.1.0",
-  "manifest_version": 3,
+  "manifest_version": 2,
   "icons": {
     "48": "icons/icon_48.png",
     "128": "icons/icon_128.png"
   },
-  "action": {
+  "browser_action": {
     "default_title": "股票基金助手",
     "default_popup": "popup/popup.html"
   },
   "background": {
-    "service_worker": "./background.js"
+    "scripts": ["background.js"]
   },
-  "permissions": ["storage"],
-  "host_permissions": ["https://push2.eastmoney.com/*", "https://fundsuggest.eastmoney.com/*", "https://api.doctorxiong.club/*"]
+  "permissions": ["storage", "https://push2.eastmoney.com/*", "https://fundsuggest.eastmoney.com/*", "https://api.doctorxiong.club/*"]
 }

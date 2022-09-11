@@ -5,7 +5,7 @@
 
 股票基金助手
 
-一款能够自定义添加和查看股票和基金的助手，无论上班下班，只要在浏览网页时，轻点右上角就能查看实时的财富动态。
+一款界面美观、功能简约的课自定义添加股票和基金的助手，添加浏览器插件后，轻点右上角即可查看实时的财富动态。
 
 ## 技术栈
 
@@ -47,6 +47,7 @@
 <img src="./screenshot/p1.png" width="520px" /><br/>
 <img src="./screenshot/p2.png" width="520px" /><br/>
 <img src="./screenshot/p3.png" width="520px" /><br/>
+<img src="./screenshot/p4.png" width="520px" /><br/>
 
 特别鸣谢：ICON 来源——by@我是一台图标制造机（iconfont@iconchan）
 
@@ -54,8 +55,10 @@
 
 ### v0.1.0
 
-- 更新版本依赖
+- 新增下拉搜索
+- 新增分时图显示
 - 修复自选不显示问题
+- 更新版本依赖
 
 ### v0.0.5
 

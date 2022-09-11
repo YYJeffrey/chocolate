@@ -1,7 +1,7 @@
 <template>
   <div class="content">
     <a-card class="card">
-      <a-card-grid v-for="item in stockBoard" :key="item.f12" class="card-grid">
+      <a-card-grid v-for="item in stockBoard" :key="item.f12" class="card-grid" @click="showModal(item.nid)">
         <span class="card-title">{{ item.f14 }}</span>
         <span :class="'index ' + (item.f4 >= 0 ? 'red' : 'green')">{{ item.f2 | changeTwoDecimal }}</span>
         <div class="increase-box">
@@ -51,7 +51,7 @@
       </a-modal>
     </div>
 
-    <a-table v-if="listData && listData.length > 0" class="table" :data-source="listData" :pagination="false" size="small" rowClassName="table-row">
+    <a-table v-if="listData && listData.length > 0" class="table" :data-source="listData" :pagination="false" size="small" rowClassName="table-row" :customRow="rowClick">
       <a-table-column title="名称" data-index="name" :align="'center'">
         <template slot-scope="text, record">
           <span class="table-column bold">{{ record.name }}</span>
@@ -94,10 +94,14 @@
       </a-table-column>
       <a-table-column title="操作" :align="'center'">
         <template slot-scope="record">
-          <a-icon type="delete" @click="removeData(record)" />
+          <a-icon type="delete" @click.stop="removeData(record)" />
         </template>
       </a-table-column>
     </a-table>
+
+    <a-modal :visible="visible" :footer="null" width="100%" :zIndex="999" @cancel="cancelModal" :dialogStyle="{ top: '30px' }">
+      <img :src="clickStock ? 'https://webquotepic.eastmoney.com/GetPic.aspx?imageType=r&nid=' + nid : 'https://j4.dfcfw.com/charts/pic6/' + nid + '.png'" width="100%" />
+    </a-modal>
   </div>
 </template>
 
@@ -109,7 +113,10 @@ export default {
     return {
       searchType: 'stock',
       searchKey: null,
+      nid: null,
+      clickStock: true,
       showQrModal: false,
+      visible: false,
       stockBoard: [],
       listData: [],
       searchList: [],
@@ -122,9 +129,7 @@ export default {
       }
       this.updateListData(true);
     });
-
     this.getStockBoard();
-
     if (util.isDealingTime()) {
       setInterval(() => {
         this.getStockBoard();
@@ -154,7 +159,14 @@ export default {
       const url = 'https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&fields=f2,f3,f4,f12,f14&secids=1.000001,1.000300,1.000905,0.399001,0.399005,0.399006';
       this.$axios.get(url).then(res => {
         if (res.status === 200 && res.data.data) {
-          this.stockBoard = res.data.data.diff;
+          const stockBoard = res.data.data.diff;
+          stockBoard[0].nid = '1.000001';
+          stockBoard[1].nid = '1.000300';
+          stockBoard[2].nid = '1.000905';
+          stockBoard[3].nid = '0.399001';
+          stockBoard[4].nid = '0.399005';
+          stockBoard[5].nid = '0.399006';
+          this.stockBoard = stockBoard;
         }
       });
     },
@@ -162,30 +174,26 @@ export default {
      * 获取股票数据
      */
     getStockData(code) {
-      return new Promise(resolve => {
-        const url = `https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&fields=f2,f3,f4,f12,f14&secids=1.${code},0.${code}`;
-        const stocks = [];
+      const value = code.replace(/[^0-9]/gi, '');
+      const nid = code.includes('sh') ? '1.' + value : '0.' + value;
 
+      return new Promise(resolve => {
+        const url = `https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&fields=f2,f3,f4,f12,f14&secids=${nid}`;
+        const stock = {};
         this.$axios
           .get(url)
           .then(res => {
             if (res.status === 200 && res.data.data) {
               const data = res.data.data.diff;
-              for (const i in data) {
-                const stock = {};
-                stock.name = data[i].f14;
-                stock.code = data[i].f12;
-                stock.price = data[i].f2;
-                stock.percent = data[i].f3;
-                stock.type = 'stock';
-                stocks.push(stock);
-              }
+              const info = data[0];
+              stock.name = info.f14;
+              stock.code = info.f12;
+              stock.price = info.f2;
+              stock.percent = info.f3;
+              stock.nid = nid;
+              stock.type = 'stock';
             }
-            if (stocks.length === 2) {
-              resolve(stocks[1]);
-            } else {
-              resolve(stocks[0]);
-            }
+            resolve(stock);
           })
           .catch(() => {
             resolve(null);
@@ -199,7 +207,6 @@ export default {
       return new Promise(resolve => {
         const url = `https://fundmobapi.eastmoney.com/FundMNewApi/FundMNFInfo?pageIndex=1&pageSize=20&plat=Android&appType=ttjj&product=EFund&Version=1&deviceid=1&Fcodes=${code}`;
         const fund = {};
-
         this.$axios
           .get(url)
           .then(res => {
@@ -213,6 +220,7 @@ export default {
                   ? parseFloat(isNaN(info.GSZ) ? null : info.GSZ)
                   : parseFloat(isNaN(info.NAV) ? null : info.NAV);
               fund.percent = parseFloat(info.GSZZL);
+              fund.nid = code;
               fund.type = 'fund';
             }
             resolve(fund);
@@ -232,7 +240,6 @@ export default {
         }
         const url = `https://api.doctorxiong.club/v1/stock/all?keyWord=${key}`;
         const stocks = [];
-
         this.$axios
           .get(url)
           .then(res => {
@@ -242,8 +249,8 @@ export default {
               for (const i in data) {
                 const stock = {};
                 const label = data[i][1];
-                const value = data[i][0].replace(/[^0-9]/gi, '');
-                stock.label = label + '（' + value + '）';
+                const value = data[i][0];
+                stock.label = label + '（' + data[i][0].replace(/[^0-9]/gi, '') + '）';
                 stock.value = value;
                 stocks.push(stock);
               }
@@ -265,7 +272,6 @@ export default {
         }
         const url = `https://fundsuggest.eastmoney.com/FundSearch/api/FundSearchAPI.ashx?&m=9&key=${key}`;
         const funds = [];
-
         this.$axios
           .get(url)
           .then(res => {
@@ -286,6 +292,36 @@ export default {
             resolve(null);
           });
       });
+    },
+    /**
+     * 点击表格行
+     */
+    rowClick(record) {
+      return {
+        on: {
+          click: () => {
+            if (record.type === 'stock') {
+              this.showModal(record.nid);
+            } else {
+              this.showModal(record.nid, false);
+            }
+          },
+        },
+      };
+    },
+    /**
+     * 显示图表
+     */
+    showModal(nid, clickStock = true) {
+      this.clickStock = clickStock;
+      this.nid = nid;
+      this.visible = true;
+    },
+    /**
+     * 隐藏图表
+     */
+    cancelModal() {
+      this.visible = false;
     },
     /**
      * 更改搜索类型
@@ -329,7 +365,6 @@ export default {
         return;
       }
       const listData = this.listData;
-
       if (this.searchType === 'stock') {
         this.getStockData(code).then(res => {
           if (res && 'code' in res) {
@@ -347,7 +382,6 @@ export default {
           }
         });
       }
-
       if (this.searchType === 'fund') {
         this.getFundData(code).then(res => {
           if (res && 'code' in res) {
@@ -382,7 +416,6 @@ export default {
      */
     updateListData(updateStorage = false) {
       const promises = [];
-
       for (const index in this.listData) {
         const item = this.listData[index];
         if (item.type === 'stock') {
@@ -391,11 +424,9 @@ export default {
           promises.push(this.getFundData(item.code));
         }
       }
-
       Promise.all(promises).then(res => {
         if (res.length > 0 && res.length === this.listData.length && 'code' in res[0]) {
           this.listData = res;
-
           if (updateStorage) {
             chrome.storage.sync.set({ listData: res });
           }
@@ -407,7 +438,6 @@ export default {
      */
     removeData(event) {
       const that = this;
-
       this.$confirm({
         title: '删除提示',
         content: `您确定要删除该${event.type === 'stock' ? '股票' : '基金'}`,
@@ -420,7 +450,6 @@ export default {
           const listData = that.listData;
           listData.splice(index, 1);
           that.listData = listData;
-
           chrome.storage.sync.set({ listData: listData }, () => {
             that.$message.success(`${event.type === 'stock' ? '股票' : '基金'}删除成功`);
           });
