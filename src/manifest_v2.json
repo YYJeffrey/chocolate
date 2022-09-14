@@ -1,7 +1,7 @@
 {
   "name": "股票基金助手",
   "description": "一款界面美观、功能简约的课自定义添加股票和基金的助手，添加浏览器插件后，轻点右上角即可查看实时的财富动态。",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "manifest_version": 2,
   "icons": {
     "48": "icons/icon_48.png",

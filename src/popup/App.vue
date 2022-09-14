@@ -173,9 +173,11 @@ export default {
     /**
      * 获取股票数据
      */
-    getStockData(code) {
-      const value = code.replace(/[^0-9]/gi, '');
-      const nid = code.includes('sh') ? '1.' + value : '0.' + value;
+    getStockData(code, nid = null) {
+      if (nid === null) {
+        const value = code.replace(/[^0-9]/gi, '');
+        nid = code.includes('sh') ? '1.' + value : '0.' + value;
+      }
 
       return new Promise(resolve => {
         const url = `https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&fields=f2,f3,f4,f12,f14&secids=${nid}`;
@@ -419,7 +421,7 @@ export default {
       for (const index in this.listData) {
         const item = this.listData[index];
         if (item.type === 'stock') {
-          promises.push(this.getStockData(item.code));
+          promises.push(this.getStockData(null, item.nid));
         } else if (item.type === 'fund') {
           promises.push(this.getFundData(item.code));
         }
